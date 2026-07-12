@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Theme toggle
     const themeToggle = document.getElementById('theme-toggle');
-    const currentTheme = localStorage.getItem('theme') || 'light';
+    let currentTheme = localStorage.getItem('theme') || 'light';
     if (currentTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
@@ -21,217 +21,138 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tab switching
     const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             tabBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
-            tabContents.forEach(content => content.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
-            
             updateCalculations();
         });
     });
 
-    // Setup option buttons for all tabs
-    setupOptionButtons('peptide');
-    setupOptionButtons('hgh');
-    setupOptionButtons('hcg');
-    
-    // Inputs
-    const peptideDose = document.getElementById('peptide-dose');
-    const peptideSlider = document.getElementById('peptide-dose-slider');
-    const hghDose = document.getElementById('hgh-dose');
-    const hghSlider = document.getElementById('hgh-dose-slider');
+    // Setup buttons
+    ['peptide', 'hgh', 'hcg'].forEach(type => setupOptionButtons(type));
+
+    // Sync sliders
+    ['peptide', 'hgh', 'hcg'].forEach(type => {
+        syncInputs(type + '-dose', type + '-dose-slider');
+    });
+
     const syringeType = document.getElementById('syringe-type');
-
-    // Sync number and slider
-    function syncInputs(numId, sliderId) {
-        const num = document.getElementById(numId);
-        const slider = document.getElementById(sliderId);
-        
-        num.addEventListener('input', () => {
-            slider.value = num.value;
-            updateCalculations();
-        });
-        
-        slider.addEventListener('input', () => {
-            num.value = slider.value;
-            updateCalculations();
-        });
-    }
-
-    syncInputs('peptide-dose', 'peptide-dose-slider');
-    syncInputs('hgh-dose', 'hgh-dose-slider');
-    syncInputs('hcg-dose', 'hcg-dose-slider');
-
     syringeType.addEventListener('change', updateCalculations);
 
-    // Custom inputs visibility
-    function setupCustomInputs() {
-        const customBtns = document.querySelectorAll('.custom-btn');
-        customBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopImmediatePropagation(); // Prevent any bubbling issues
-                
-                // Find the correct custom input for this group
-                const inputGroup = btn.closest('.input-group');
-                const customInput = inputGroup.querySelector('.custom-input');
-                
-                if (customInput) {
-                    customInput.style.display = 'block';
-                    customInput.focus();
-                }
-            });
-        });
-    }
     setupCustomInputs();
 
-    // Option buttons
     function setupOptionButtons(type) {
         const buttons = document.querySelectorAll(`#${type}-tab .option-btn`);
         buttons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopImmediatePropagation();
-                
-                // Only affect buttons in the same options group
-                const optionsGroup = btn.closest('.options');
-                const groupButtons = optionsGroup.querySelectorAll('.option-btn');
-                
-                groupButtons.forEach(b => b.classList.remove('active'));
+            btn.addEventListener('click', () => {
+                const group = btn.closest('.options');
+                group.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                
-                // Handle custom input
+
                 const inputGroup = btn.closest('.input-group');
-                const customInput = inputGroup.querySelector('.custom-input');
-                
-                if (customInput) {
-                    if (btn.dataset.value === 'custom') {
-                        customInput.style.display = 'block';
-                        customInput.focus();
-                    } else {
-                        customInput.style.display = 'none';
-                    }
+                const custom = inputGroup.querySelector('.custom-input');
+                if (custom) {
+                    custom.style.display = btn.dataset.value === 'custom' ? 'block' : 'none';
                 }
-                
                 updateCalculations();
             });
         });
     }
 
+    function setupCustomInputs() {
+        document.querySelectorAll('.custom-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const inputGroup = btn.closest('.input-group');
+                const custom = inputGroup.querySelector('.custom-input');
+                if (custom) custom.style.display = 'block';
+            });
+        });
+    }
+
+    function syncInputs(numId, sliderId) {
+        const num = document.getElementById(numId);
+        const slider = document.getElementById(sliderId);
+        if (!num || !slider) return;
+
+        num.addEventListener('input', () => { slider.value = num.value; updateCalculations(); });
+        slider.addEventListener('input', () => { num.value = slider.value; updateCalculations(); });
+    }
+
     function getVialAmount(type) {
-        let selector, customId, defaultVal = 10;
-        
-        if (type === 'peptide') {
-            selector = '#peptide-tab .option-btn.active';
-            customId = 'peptide-custom-mg';
-        } else if (type === 'hgh') {
-            selector = '#hgh-tab .option-btn.active';
-            customId = 'hgh-custom-iu';
-        } else if (type === 'hcg') {
-            selector = '#hcg-tab .option-btn.active';
-            customId = 'hcg-custom-iu';
-            defaultVal = 5000;
+        const active = document.querySelector(`#${type}-tab .option-btn.active`);
+        if (!active) return type === 'hcg' ? 5000 : 10;
+        if (active.dataset.value === 'custom') {
+            return parseFloat(document.getElementById(type + '-custom-iu' || type + '-custom-mg').value) || (type === 'hcg' ? 5000 : 10);
         }
-        
-        const activeBtn = document.querySelector(selector);
-        if (!activeBtn) return defaultVal;
-        
-        if (activeBtn.dataset.value === 'custom') {
-            return parseFloat(document.getElementById(customId).value) || defaultVal;
-        }
-        return parseFloat(activeBtn.dataset.value) || defaultVal;
+        return parseFloat(active.dataset.value) || 10;
     }
 
     function getBacWater(type) {
-        // Find the second .options group (Bac Water) in the active tab
         const tab = document.getElementById(type + '-tab');
-        if (!tab) return 1;
-        
-        const optionsGroups = tab.querySelectorAll('.options');
-        const bacOptions = optionsGroups[1]; // Second options group is Bac Water
-        
-        if (!bacOptions) return 1;
-        
-        const activeBtn = bacOptions.querySelector('.option-btn.active');
-        if (!activeBtn) return 1;
-        
-        if (activeBtn.dataset.value === 'custom') {
-            const custom = document.getElementById(type + '-custom-ml');
-            return parseFloat(custom ? custom.value : 1) || 1;
+        const groups = tab.querySelectorAll('.options');
+        const bacGroup = groups[1];
+        if (!bacGroup) return 1;
+        const active = bacGroup.querySelector('.option-btn.active');
+        if (!active) return 1;
+        if (active.dataset.value === 'custom') {
+            return parseFloat(document.getElementById(type + '-custom-ml').value) || 1;
         }
-        return parseFloat(activeBtn.dataset.value) || 1;
+        return parseFloat(active.dataset.value) || 1;
     }
 
     function updateCalculations() {
         const activeTab = document.querySelector('.tab-content.active');
         if (!activeTab) return;
-        
-        const tabId = activeTab.id;
-        const type = tabId.replace('-tab', '');
-        const syringeFactor = parseInt(syringeType.value) / 100;
+        const type = activeTab.id.replace('-tab', '');
+        const syringeTypeSelect = document.getElementById('syringe-type').value;
 
-        const vialAmount = getVialAmount(type);
-        const bacMl = getBacWater(type);
-        
-        let dose, concUnit, doseUnit, resultPrefix;
-        
-        if (type === 'peptide') {
-            dose = parseFloat(document.getElementById('peptide-dose').value) || 0.5;
-            concUnit = 'mg/ml';
-            doseUnit = 'mg';
-            resultPrefix = 'peptide';
+        const vial = getVialAmount(type);
+        const bac = getBacWater(type);
+        const doseId = type + '-dose';
+        const dose = parseFloat(document.getElementById(doseId).value) || (type === 'peptide' ? 0.5 : type === 'hgh' ? 2 : 250);
+
+        const conc = vial / bac;
+        const drawMl = dose / conc;
+        let units = Math.round(drawMl * 100);
+
+        let displayUnits = units;
+        let isPen = syringeTypeSelect === 'pen';
+
+        if (isPen) {
+            displayUnits = Math.round(drawMl * 100); // Clicks for pen
         } else {
-            // HGH or HCG (both IU based)
-            dose = parseFloat(document.getElementById(type + '-dose').value) || (type === 'hgh' ? 2 : 250);
-            concUnit = 'IU/ml';
-            doseUnit = 'IU';
-            resultPrefix = type;
+            const factor = parseInt(syringeTypeSelect) / 100;
+            displayUnits = Math.round(units * factor);
         }
-        
-        const concentration = vialAmount / bacMl;
-        const drawMl = dose / concentration;
-        const units = Math.round(drawMl * 100);
-        const adjustedUnits = Math.round(units * syringeFactor);
-        
-        // Update results
-        document.getElementById(resultPrefix + '-conc').textContent = concentration.toFixed(1) + ' ' + concUnit;
+
+        const resultPrefix = type;
+        document.getElementById(resultPrefix + '-conc').textContent = conc.toFixed(1) + (type === 'peptide' ? ' mg/ml' : ' IU/ml');
         document.getElementById(resultPrefix + '-draw-ml').textContent = drawMl.toFixed(3) + ' ml';
-        document.getElementById(resultPrefix + '-units').textContent = adjustedUnits + ' U';
-        
-        // Syringe visual
-        const percent = Math.min((drawMl / 1) * 100, 100);
-        document.getElementById(resultPrefix + '-liquid').style.height = percent + '%';
-        document.getElementById(resultPrefix + '-syringe-label').textContent = 
-            drawMl.toFixed(2) + ' ml / ' + adjustedUnits + ' U';
-        
-        // HGH & HCG mg equivalent
+        document.getElementById(resultPrefix + '-units').textContent = displayUnits + (isPen ? ' Klicks' : ' U');
+
+        // Visual
+        const percent = Math.min(drawMl * 100, 100);
+        const liquid = document.getElementById(resultPrefix + '-liquid');
+        if (liquid) liquid.style.height = percent + '%';
+
+        document.getElementById(resultPrefix + '-syringe-label').textContent = drawMl.toFixed(2) + ' ml / ' + displayUnits + (isPen ? ' Klicks' : ' U');
+
+        // mg equivalent
         if (type === 'hgh') {
-            const mg = (vialAmount / 3).toFixed(2);
-            document.getElementById('hgh-mg-equiv').textContent = `~${mg} mg`;
+            document.getElementById('hgh-mg-equiv').textContent = `~${(vial / 3).toFixed(2)} mg`;
         } else if (type === 'hcg') {
-            // Typical: 5000 IU vial ≈ 5 mg
-            const mg = (vialAmount / 1000).toFixed(2);
-            document.getElementById('hcg-mg-equiv').textContent = `~${mg} mg`;
+            document.getElementById('hcg-mg-equiv').textContent = `~${(vial / 9000).toFixed(3)} mg`;
         }
     }
 
-    // Live updates
-    const allInputs = document.querySelectorAll('input, select, button');
-    allInputs.forEach(input => {
-        input.addEventListener('input', updateCalculations);
-        input.addEventListener('change', updateCalculations);
+    // Live update
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', updateCalculations);
+        el.addEventListener('change', updateCalculations);
     });
 
-    // Initial calculation
     updateCalculations();
-
-    // Keyboard support for mobile
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            updateCalculations();
-        }
-    });
 });
