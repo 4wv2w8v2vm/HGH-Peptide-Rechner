@@ -84,10 +84,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function getVialAmount(type) {
         const active = document.querySelector(`#${type}-tab .option-btn.active`);
         if (!active) return type === 'hcg' ? 5000 : 10;
+        
         if (active.dataset.value === 'custom') {
-            return parseFloat(document.getElementById(type + '-custom-iu' || type + '-custom-mg').value) || (type === 'hcg' ? 5000 : 10);
+            let customId = type + '-custom-';
+            if (type === 'peptide') customId += 'mg';
+            else customId += 'iu';
+            const value = parseFloat(document.getElementById(customId).value);
+            return isNaN(value) ? (type === 'hcg' ? 5000 : 10) : value;
         }
-        return parseFloat(active.dataset.value) || 10;
+        return parseFloat(active.dataset.value) || (type === 'hcg' ? 5000 : 10);
     }
 
     function getBacWater(type) {
