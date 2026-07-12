@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peptid & HGH Rechner</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-syringe"></i> Peptid & HGH Rechner</h1>
+            <div class="mode-toggle">
+                <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="peptide">Peptide</button>
+            <button class="tab-btn" data-tab="hgh">HGH</button>
+            <button class="tab-btn" data-tab="hcg">HCG</button>
+        </div>
+
+        <!-- Peptide Tab -->
+        <div id="peptide-tab" class="tab-content active">
+            <div class="input-group">
+                <label>Vial Größe (mg)</label>
+                <div class="options">
+                    <button class="option-btn active" data-value="10">10mg</button>
+                    <button class="option-btn" data-value="20">20mg</button>
+                    <button class="option-btn" data-value="50">50mg</button>
+                    <button class="option-btn custom-btn" data-value="custom">Andere</button>
+                </div>
+                <input type="number" id="peptide-custom-mg" class="custom-input" placeholder="mg" style="display: none;">
+            </div>
+
+            <div class="input-group">
+                <label>Bac Water (ml)</label>
+                <div class="options">
+                    <button class="option-btn active" data-value="1">1ml</button>
+                    <button class="option-btn" data-value="2">2ml</button>
+                    <button class="option-btn" data-value="3">3ml</button>
+                    <button class="option-btn custom-btn" data-value="custom">Andere</button>
+                </div>
+                <input type="number" id="peptide-custom-ml" class="custom-input" placeholder="ml" style="display: none;" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label>Gewünschte Dosis (mg)</label>
+                <input type="number" id="peptide-dose" value="0.5" step="0.1">
+                <input type="range" id="peptide-dose-slider" min="0" max="5" step="0.1" value="0.5">
+            </div>
+
+            <div class="results">
+                <div class="result-item">
+                    <span>Konzentration:</span>
+                    <strong id="peptide-conc">10 mg/ml</strong>
+                </div>
+                <div class="result-item">
+                    <span>Aufzuziehen:</span>
+                    <strong id="peptide-draw-ml">0.05 ml</strong>
+                </div>
+                <div class="result-item">
+                    <span>Insulin Einheiten (U-100):</span>
+                    <strong id="peptide-units">5 U</strong>
+                </div>
+            </div>
+
+            <div class="syringe-container">
+                <div class="syringe">
+                    <div class="syringe-body">
+                        <div class="syringe-liquid" id="peptide-liquid" style="height: 10%;"></div>
+                    </div>
+                    <div class="syringe-scale"></div>
+                    <div class="syringe-needle"></div>
+                </div>
+                <p id="peptide-syringe-label" class="syringe-label">0.05 ml / 5 U</p>
+            </div>
+        </div>
+
+        <!-- HGH Tab -->
+        <div id="hgh-tab" class="tab-content">
+            <div class="input-group">
+                <label>HGH Vial (IU)</label>
+                <div class="options">
+                    <button class="option-btn active" data-value="10">10 IU</button>
+                    <button class="option-btn" data-value="12">12 IU</button>
+                    <button class="option-btn" data-value="16">16 IU</button>
+                    <button class="option-btn" data-value="30">30 IU</button>
+                    <button class="option-btn" data-value="15.4">15.4 IU</button>
+                    <button class="option-btn custom-btn" data-value="custom">Andere</button>
+                </div>
+                <input type="number" id="hgh-custom-iu" class="custom-input" placeholder="IU" style="display: none;">
+                <div class="mg-iu">
+                    <small id="hgh-mg-equiv">~3.33 mg</small>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Bac Water (ml)</label>
+                <div class="options">
+                    <button class="option-btn active" data-value="1">1ml</button>
+                    <button class="option-btn" data-value="2">2ml</button>
+                    <button class="option-btn" data-value="3">3ml</button>
+                    <button class="option-btn custom-btn" data-value="custom">Andere</button>
+                </div>
+                <input type="number" id="hgh-custom-ml" class="custom-input" placeholder="ml" style="display: none;" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label>Gewünschte Dosis (IU)</label>
+                <input type="number" id="hgh-dose" value="2" step="0.1">
+                <input type="range" id="hgh-dose-slider" min="0" max="10" step="0.1" value="2">
+            </div>
+
+            <div class="results">
+                <div class="result-item">
+                    <span>Konzentration:</span>
+                    <strong id="hgh-conc">10 IU/ml</strong>
+                </div>
+                <div class="result-item">
+                    <span>Aufzuziehen:</span>
+                    <strong id="hgh-draw-ml">0.2 ml</strong>
+                </div>
+                <div class="result-item">
+                    <span>Insulin Einheiten (U-100):</span>
+                    <strong id="hgh-units">20 U</strong>
+                </div>
+            </div>
+
+            <div class="syringe-container">
+                <div class="syringe">
+                    <div class="syringe-body">
+                        <div class="syringe-liquid" id="hgh-liquid" style="height: 20%;"></div>
+                    </div>
+                    <div class="syringe-scale"></div>
+                    <div class="syringe-needle"></div>
+                </div>
+                <p id="hgh-syringe-label" class="syringe-label">0.2 ml / 20 U</p>
+            </div>
+        </div>
+
+        <!-- HCG Tab -->
+        <div id="hcg-tab" class="tab-content">
+            <div class="input-group">
+                <label>HCG Vial (IU)</label>
+                <div class="options">
+                    <button class="option-btn active" data-value="5000">5000 IU</button>
+                    <button class="option-btn custom-btn" data-value="custom">Andere</button>
+                </div>
+                <input type="number" id="hcg-custom-iu" class="custom-input" placeholder="IU" style="display: none;">
+                <div class="mg-iu">
+                    <small id="hcg-mg-equiv">~5 mg</small>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Bac Water (ml)</label>
+                <div class="options">
+                    <button class="option-btn active" data-value="1">1ml</button>
+                    <button class="option-btn" data-value="2">2ml</button>
+                    <button class="option-btn" data-value="3">3ml</button>
+                    <button class="option-btn custom-btn" data-value="custom">Andere</button>
+                </div>
+                <input type="number" id="hcg-custom-ml" class="custom-input" placeholder="ml" style="display: none;" step="0.1">
+            </div>
+
+            <div class="input-group">
+                <label>Gewünschte Dosis (IU)</label>
+                <input type="number" id="hcg-dose" value="250" step="10">
+                <input type="range" id="hcg-dose-slider" min="0" max="1000" step="10" value="250">
+            </div>
+
+            <div class="results">
+                <div class="result-item">
+                    <span>Konzentration:</span>
+                    <strong id="hcg-conc">5000 IU/ml</strong>
+                </div>
+                <div class="result-item">
+                    <span>Aufzuziehen:</span>
+                    <strong id="hcg-draw-ml">0.05 ml</strong>
+                </div>
+                <div class="result-item">
+                    <span>Insulin Einheiten (U-100):</span>
+                    <strong id="hcg-units">5 U</strong>
+                </div>
+            </div>
+
+            <div class="syringe-container">
+                <div class="syringe">
+                    <div class="syringe-body">
+                        <div class="syringe-liquid" id="hcg-liquid" style="height: 5%;"></div>
+                    </div>
+                    <div class="syringe-scale"></div>
+                    <div class="syringe-needle"></div>
+                </div>
+                <p id="hcg-syringe-label" class="syringe-label">0.05 ml / 5 U</p>
+            </div>
+        </div>
+
+        <div class="syringe-options">
+            <label>Spritzen-Typ:</label>
+            <select id="syringe-type">
+                <option value="100">U-100 (1ml = 100U)</option>
+                <option value="50">U-50 (1ml = 50U)</option>
+                <option value="40">U-40 (1ml = 40U)</option>
+            </select>
+        </div>
+
+        <footer>
+            <p>Live-Berechnung • Für Informationszwecke • Konsultiere einen Fachmann</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
